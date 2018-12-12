@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 # split data l into n folds
 def chunks(l, n):
@@ -98,3 +99,75 @@ def createParticle(num_of_hidden_layers, num_of_nodes_in_hidden_layer, num_of_in
     list_all_weight.extend(list_weight_hidden_hidden)
     list_all_weight.append(list_weight_hidden_output)
     return list_all_weight
+
+# create output from each node in network
+def createY(num_of_hidden_layers, num_of_nodes_in_hidden_layer, num_of_input = 30, num_of_output = 2):
+    list_Y_hidden = []
+    for layer_index in range(0, num_of_hidden_layers):
+        list_Y_each_layer = np.zeros(num_of_nodes_in_hidden_layer[layer_index])
+        list_Y_hidden.append(list_Y_each_layer)
+    list_Y_output = []
+    for node_index in range(0, num_of_output):
+        list_Y_each_layer = np.zeros(num_of_output)
+        list_Y_output.append(list_Y_each_layer)
+    list_all_Y = []
+    list_all_Y.extend(list_Y_hidden)
+    list_all_Y.extend(list_Y_output)
+    return list_all_Y         
+
+def sigmoid(x):
+    result = (1 / (1 + math.exp(x)))
+    result = round(result, 7)
+    return result
+
+# create a list contains pbest of each sample
+def createListPbest(num_of_samples):
+    list_pbest = np.random.uniform(low = 0, high = 1.0, size = num_of_samples)
+    return list_pbest
+
+# create a list contains velocity of each sample
+def createListVelocity(num_of_hidden_layers, num_of_nodes_in_hidden_layer, num_of_input = 8, num_of_output = 2):
+    # num_of_input = 30
+    # num_of_output = 1
+    # all layers that have weights  = hidden layer + output layer
+    num_of_all_layer = num_of_hidden_layers + 1
+    # create weight for hidden layer to hidden layer
+    list_weight_hidden_hidden = []
+    for layer_index in range(0, num_of_hidden_layers):
+        list_weight_each_layer = []
+        for node_index in range(0, num_of_nodes_in_hidden_layer[layer_index]):
+            list_weight_each_node = []       
+            # num_of_weight = weight from previous layer + weight bias
+            # 1st element in weight_to_this_node is weight_bias
+            # Input layer -> 1st hidden layer
+            if (layer_index == 0):
+                num_of_weight = num_of_input + 1
+                weight_to_this_node = np.random.uniform(low = -1.0, high = 1.0, size = num_of_weight)
+                list_weight_each_node.append(weight_to_this_node)
+            # hidden layer -> hidden layer
+            else:
+                num_of_weight = num_of_nodes_in_hidden_layer[layer_index - 1] + 1
+                weight_to_this_node = np.random.uniform(low = -1.0, high = 1.0, size = num_of_weight)
+                list_weight_each_node.append(weight_to_this_node)
+            list_weight_each_layer.extend(list_weight_each_node)
+        list_weight_hidden_hidden.append(list_weight_each_layer)
+    # craete weight for hidden to output
+    list_weight_hidden_output = []
+    for node_index in range(0, num_of_output):
+        # number of weight from the last hidden layer to output node = number of node in the last hidden layer + weight bias
+        num_of_weight = num_of_nodes_in_hidden_layer[num_of_hidden_layers - 1] + 1
+        weight_to_this_node = np.random.uniform(low = -1.0, high = 1.0, size = num_of_weight)
+        list_weight_hidden_output.append(weight_to_this_node)
+    # combine all layers together
+    list_all_weight = []
+    list_all_weight.extend(list_weight_hidden_hidden)
+    list_all_weight.append(list_weight_hidden_output)
+    return list_all_weight
+
+# calculate mean absolute error
+def mae(actual, predict_1, predict_2):
+    error_1 = math.fabs(actual[0] - predict_1)
+    error_2 = math.fabs(actual[1] - predict_2)
+    mae_value = ((error_1 + error_2) / 2)
+    return mae_value
+
