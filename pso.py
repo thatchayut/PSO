@@ -93,7 +93,9 @@ def main():
             key = i
             value = process.createParticle(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
             particles[key] = value
-        print(particles[0])
+            
+        # create a list to record output from each node
+        list_all_Y = process.createY(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
 
 
 if __name__ == '__main__':
