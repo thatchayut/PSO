@@ -7,12 +7,12 @@ import process
 
 def main():
     # prepare data
-    # default row_to_read = 9357
-    # default row_to_read_5_days = 9237
-    # default row_to_read_10_days = 9117    
+    # default row_to_read = 8029
+    # default row_to_read_5_days = 8149
+    # default row_to_read_10_days = 8029    
     # row_to_read_5_days = 9237
     # row_to_read_10_days = 9117
-    row_to_read = 9117
+    row_to_read = 8029
     file = pd.read_csv("AirQualityUCI.csv", nrows = row_to_read)
     col_to_read_input = ['PT08.S1(CO)', 'PT08.S2(NMHC)', 'PT08.S3(NOx)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH']
     col_to_read_output_5_days = ['Next_5_days_C6H6(GT)']
@@ -55,8 +55,45 @@ def main():
         file_training_input = file_input.iloc[chunk_sample_train]
         file_training_output_5_days = file_output_5_days.iloc[chunk_sample_train]
         file_training_output_10_days =file_output_10_days.iloc[chunk_sample_train]
-        print(len(file_output_10_days))
-        # print(file_training_input)
+
+        # create list of training data
+        num_of_samples = len(chunk_sample_train)
+        list_training_input = []
+        for row in range(0, num_of_samples):
+            list_each_sample = []
+            for element in file_training_input.iloc[row, :]:
+                list_each_sample.append(element)
+            list_training_input.append(list_each_sample)
+
+        list_training_output_5_days = []
+        for row in range(0, num_of_samples):
+            list_each_sample = []
+            for element in file_training_output_5_days.iloc[row, :]:
+                list_each_sample.append(element)
+            list_training_output_5_days.append(list_each_sample)
+
+        list_training_output_5_days = []
+        for row in range(0, num_of_samples):
+            list_each_sample = []
+            for element in file_training_output_5_days.iloc[row, :]:
+                list_each_sample.append(element)
+            list_training_output_5_days.append(list_each_sample)
+        
+        # scaling input and output to be in range (-1, 1)
+        list_training_input_normalized = []
+        # print(list_training_input)
+        for sample in list_training_input:
+            result = process.scaling(sample)
+            list_training_input_normalized.append(result)    
+        # print("list training normalized = " + str(list_training_input_normalized[0])) 
+
+        # create all particles in this swarm
+        particles = {}
+        for i in range(0, num_of_samples):
+            key = i
+            value = process.createParticle(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
+            particles[key] = value
+        print(particles[0])
 
 
 if __name__ == '__main__':
