@@ -5,8 +5,10 @@ import random
 import math
 import process
 import copy
+import time
 
 def main():
+    start_time = time.time()
     # prepare data
     # default row_to_read = 8029
     # default row_to_read_5_days = 8149
@@ -59,6 +61,7 @@ def main():
 
     # k-fold cross validation
     for test_sample_index in range(0, num_of_chunks):
+        fold_start_time = time.time()
         print("\n------------------------------------------ K : " + str(test_sample_index + 1) + " --------------------------------")
         chunk_sample_test = chunk_sample[test_sample_index]
         chunk_sample_train = []
@@ -67,7 +70,7 @@ def main():
         for train_sample_index in range(0, num_of_chunks):
             if (chunk_sample[train_sample_index] is not chunk_sample_test):
                 chunk_sample_train.extend(chunk_sample[train_sample_index])
-        print("Size fo training data : " + str(len(chunk_sample_train)))
+        # print("Size fo training data : " + str(len(chunk_sample_train)))
 
         # prepare data for training
         file_training_input = file_input.iloc[chunk_sample_train]
@@ -150,6 +153,8 @@ def main():
 
         # TRAINING
         # Iterate through generations
+        print(" #### TRAINING ####")
+        print("Size fo training data : " + str(len(chunk_sample_train)))
         for count_generation in range(0, num_of_gen):
             print(" #### Generation " + str(count_generation + 1) + " ####")
             list_all_Y = process.createY(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
@@ -196,27 +201,27 @@ def main():
                 desired_output_5_days = list_training_output_5_days_normalized[i]
                 desired_output_10_days = list_training_output_10_days_normalized[i]
 
-                print("Actual Output : " + str(actual_output))
-                print("Desired Output (5 days) : " + str(desired_output_5_days))
-                print("Desired Output (10 days) : " + str(desired_output_10_days))
+                # print("Actual Output : " + str(actual_output))
+                # print("Desired Output (5 days) : " + str(desired_output_5_days))
+                # print("Desired Output (10 days) : " + str(desired_output_10_days))
 
                 # calculate fitness of each particle
                 fitness_value = process.mae(actual_output, desired_output_5_days, desired_output_10_days)
-                print("fitness value = " + str(fitness_value))
-                print("previous fitness value = " + str(list_pbest[i]))
-                print()
+                # print("fitness value = " + str(fitness_value))
+                # print("The best fitness value = " + str(list_pbest[i]))
+                # print()
 
-                print("BEFORE list_pbest = " + str(list_pbest))
+                # print("BEFORE list_pbest = " + str(list_pbest))
                 # compare the performance of each individual to its best performance (pbest)
                 if (fitness_value < list_pbest[i]):
                     # change pbest of this particle
                     list_pbest[i] = fitness_value
                     particles_pbest[i] = copy.deepcopy(particles[i])
 
-                print("Before update : " + str(particles[i]))
-                print()
-                print("pbest particles : " + str(particles_pbest[i]))
-                print()
+                # print("Before update : " + str(particles[i]))
+                # print()
+                # print("pbest particles : " + str(particles_pbest[i]))
+                # print()
                 # change the velocity vector of each particles
                 for layer_index in range(0, num_of_hidden_layers):
                     for node_index in range(0, num_of_nodes_in_hidden_layer[layer_index]):
@@ -249,9 +254,133 @@ def main():
                             # update weight
                             particles[i][last_layer_index][output_index][weight_index] = x + particles_velocity[i][last_layer_index][output_index][weight_index]
                 
-                print("Velocity of gen " + str(count_generation + 1) + " of particles " + str(i) + " = " + str(particles_velocity[i]))
-                print()
-                print("After update : " + str(particles[i]))
+                # print("Velocity of gen " + str(count_generation + 1) + " of particles " + str(i) + " = " + str(particles_velocity[i]))
+                # print()
+                # print("After update : " + str(particles[i]))
+        # Testing
+        # prepare testing data
+        print()
+        print(" #### TESTING ####")
+        file_testing_input = file_input.iloc[chunk_sample_test]
+        file_testing_output_5_days = file_output_5_days.iloc[chunk_sample_test]
+        file_testing_output_10_days = file_output_10_days.iloc[chunk_sample_test]
+        # create list testing data
+        num_of_samples_to_test = len(chunk_sample_test)
+        print("Size of testing data : " + str(num_of_samples_to_test))
+        list_testing_input = []
+        for row in range(0, num_of_samples_to_test):
+            list_each_sample = []
+            for element in file_testing_input.iloc[row, :]:
+                list_each_sample.append(element)
+            list_testing_input.append(list_each_sample)
+        
+        list_testing_output_5_days = []
+        for row in range(0, num_of_samples_to_test):
+            list_each_sample = []
+            for element in file_testing_output_5_days.iloc[row, :]:
+                list_each_sample.append(element)
+            list_testing_output_5_days.append(list_each_sample)        
+
+        list_testing_output_10_days = []
+        for row in range(0, num_of_samples_to_test):
+            list_each_sample = []
+            for element in file_testing_output_10_days.iloc[row, :]:
+                list_each_sample.append(element)
+            list_testing_output_10_days.append(list_each_sample)     
+
+        # scaling input and output to be in range (-1, 1)
+        list_testing_input_normalized = []
+        for sample in list_testing_input:
+            result = process.scaling(sample)
+            list_testing_input_normalized.append(result)    
+
+        list_testing_output_5_days_normalized = []
+        for sample_index in range(0, len(list_testing_output_5_days)):
+            list_total_data_in_sample = []
+            list_total_data_in_sample.extend(list_testing_input[sample_index])
+            list_total_data_in_sample.extend(list_testing_output_5_days[sample_index])
+
+            result = process.scaling(list_total_data_in_sample)
+            list_testing_output_5_days_normalized.append(result[len(result) - 1])
+
+        list_testing_output_10_days_normalized = []
+        for sample_index in range(0, len(list_testing_output_10_days)):
+            list_total_data_in_sample = []
+            list_total_data_in_sample.extend(list_testing_input[sample_index])
+            list_total_data_in_sample.extend(list_testing_output_10_days[sample_index])
+
+            result = process.scaling(list_total_data_in_sample)
+            list_testing_output_10_days_normalized.append(result[len(result) - 1])
+
+        # create a list to record output from each node
+        list_all_Y = process.createY(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
+
+        # Forwarding
+        total_error = 0
+        for i in range(0, num_of_samples_to_test):
+            # calcualte output for each node in hidden layers
+            for layer_index in range(0, num_of_hidden_layers):
+                for node_index in range(0, num_of_nodes_in_hidden_layer[layer_index]):
+                    result = 0
+                    # weight index is between 1 to len(particles) because weight_index '0' is weight bias
+                    num_of_weight = len(particles_pbest[i][layer_index][node_index])
+                    for weight_index in range(1, num_of_weight):
+                        # for node in the 1st hidden layer
+                        if (layer_index == 0):
+                            # index of list_training_input_normalized must be the same index as the one for an individual
+                            for element in list_testing_input_normalized[0]:
+                                result += (element * particles_pbest[i][layer_index][node_index][weight_index])
+                        # for other layers
+                        else:
+                            # y_this_node = sum(y_previous_node * weight_to_this_node)
+                            for element in list_all_Y[layer_index - 1]:
+                                result += (element * particles_pbest[i][layer_index][node_index][weight_index])
+                    # add bias to result (weight_index '0' is weight bias)
+                    result += particles_pbest[i][layer_index][node_index][0]
+                    # apply activation function to result
+                    result = process.sigmoid(result)
+                    list_all_Y[layer_index][node_index] = result
+
+            # calculate output for output layer
+            num_of_output = 2
+            last_hidden_layer_index = len(particles_pbest[i]) - 2
+            last_layer_index = len(particles_pbest[i]) - 1
+            for output_index in range(0, num_of_output):
+                # output = sum(y_previous_node * weight_to_this_node)
+                result = 0
+                for weight_index in  range(0, len(particles_pbest[i][last_hidden_layer_index][output_index])):
+                    for element in list_all_Y[len(list_all_Y) - 1]:
+                        result += (element * particles_pbest[i][last_hidden_layer_index][output_index][weight_index])
+                # add bias to result (weight_index '0' is weight bias)
+                result += particles_pbest[i][last_layer_index][output_index][0]
+                result = process.sigmoid(result)
+                list_all_Y[last_layer_index][output_index] = result
+            actual_output = list_all_Y[last_layer_index]
+            desired_output_5_days = list_testing_output_5_days_normalized[i]
+            desired_output_10_days = list_testing_output_10_days_normalized[i]
+
+            print("Testing sample #" + str(i + 1))
+            print("Actual Output : " + str(actual_output))
+            print("Desired Output (5 days) : " + str(desired_output_5_days))
+            print("Desired Output (10 days) : " + str(desired_output_10_days))
+
+            # calculate fitness of each particle
+            fitness_value = process.mae(actual_output, desired_output_5_days, desired_output_10_days)
+            # print("Mean Average Error of fold - " + str(test_sample_index + 1) + " : " + str(fitness_value))
+            total_error += fitness_value
+        error = (total_error / num_of_samples_to_test)
+        error = round(error, 7)
+        print()
+        print("Mean Average Error of fold-" + str(test_sample_index + 1) + " : " + str(error))
+
+        fold_end_time = time.time()
+        fold_elapse_time_second = fold_end_time - fold_start_time
+        fold_elapse_time_minute = round((fold_elapse_time_second / 60), 4)
+        print("Time elaspe in this fold = " + str(fold_elapse_time_minute) +" minutes")
+    end_time = time.time()
+    total_elapse_time_second = end_time - start_time
+    total_elapse_time_minute = round((total_elapse_time_second / 60), 4)
+    print("\nTotal elapse time : " + str(total_elapse_time_minute) + " minutes")
 
 if __name__ == '__main__':
     main()
