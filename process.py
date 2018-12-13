@@ -122,7 +122,8 @@ def sigmoid(x):
 
 # create a list contains pbest of each sample
 def createListPbest(num_of_samples):
-    list_pbest = np.random.uniform(low = -1.0, high = 1.0, size = num_of_samples)
+    # list_pbest = np.random.uniform(low = -1.0, high = 1.0, size = num_of_samples)
+    list_pbest = np.ones(num_of_samples)
     return list_pbest
 
 # create a list contains velocity of each sample

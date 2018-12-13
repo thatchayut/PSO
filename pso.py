@@ -209,15 +209,10 @@ def main():
                 print("BEFORE list_pbest = " + str(list_pbest))
                 # compare the performance of each individual to its best performance (pbest)
                 if (fitness_value < list_pbest[i]):
-                    # print("NEW PBEST ACTIVATED!!!!!!!!!!")
-                    # print("previous pbest : " + str(list_pbest[i]))
-                    # print("new pbest : " + str(fitness_value))
                     # change pbest of this particle
                     list_pbest[i] = fitness_value
-                    particles_pbest[i] = particles[i]
-                    # print("updated pbest = " + str(list_pbest[i]))
-                # print("AFTER  list_pbest : " + str(list_pbest))
-                # print()
+                    particles_pbest[i] = copy.deepcopy(particles[i])
+
                 print("Before update : " + str(particles[i]))
                 print()
                 print("pbest particles : " + str(particles_pbest[i]))
@@ -229,20 +224,31 @@ def main():
                         # weight index is between 1 to len(particles) because weight_index '0' is weight bias
                         num_of_velocity = len(particles_velocity[i][layer_index][node_index])
                         for weight_index in range(0, num_of_velocity):
-                            # result += (element * particles[i][layer_index][node_index][weight_index])
                             previous_velocity  = particles_velocity[i][layer_index][node_index][weight_index]
                             xpbest = particles_pbest[i][layer_index][node_index][weight_index]
-                            # print("xpbest = " + str(xpbest))
                             x = particles[i][layer_index][node_index][weight_index]
-                            # print("x = " + str(x))
-
                             velocity = previous_velocity + (learning_rate * (xpbest - x))
-                            # print("velocity = " +str(velocity))
                             # update velocity
                             particles_velocity[i][layer_index][node_index][weight_index] = velocity
 
                             # update weight
                             particles[i][layer_index][node_index][weight_index] = x + particles_velocity[i][layer_index][node_index][weight_index]
+                num_of_output = 2
+                last_hidden_layer_index = len(particles[i]) - 2
+                last_layer_index = len(particles[i]) - 1
+                for output_index in range(0, num_of_output):
+                    for weight_index in  range(0, len(particles[i][last_hidden_layer_index][output_index])):
+                        for element in list_all_Y[len(list_all_Y) - 1]:
+                            previous_velocity  = particles_velocity[i][last_layer_index][output_index][weight_index]
+                            xpbest = particles_pbest[i][last_layer_index][output_index][weight_index]
+                            x = particles[i][last_layer_index][output_index][weight_index]
+                            velocity = previous_velocity + (learning_rate * (xpbest - x))
+                            # update velocity
+                            particles_velocity[i][last_layer_index][output_index][weight_index] = velocity
+
+                            # update weight
+                            particles[i][last_layer_index][output_index][weight_index] = x + particles_velocity[i][last_layer_index][output_index][weight_index]
+                
                 print("Velocity of gen " + str(count_generation + 1) + " of particles " + str(i) + " = " + str(particles_velocity[i]))
                 print()
                 print("After update : " + str(particles[i]))
