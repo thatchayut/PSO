@@ -122,7 +122,8 @@ def sigmoid(x):
 
 # create a list contains pbest of each sample
 def createListPbest(num_of_samples):
-    list_pbest = np.random.uniform(low = 0, high = 1.0, size = num_of_samples)
+    # list_pbest = np.random.uniform(low = -1.0, high = 1.0, size = num_of_samples)
+    list_pbest = np.ones(num_of_samples)
     return list_pbest
 
 # create a list contains velocity of each sample
@@ -142,12 +143,12 @@ def createListVelocity(num_of_hidden_layers, num_of_nodes_in_hidden_layer, num_o
             # Input layer -> 1st hidden layer
             if (layer_index == 0):
                 num_of_weight = num_of_input + 1
-                weight_to_this_node = np.random.uniform(low = -1.0, high = 1.0, size = num_of_weight)
+                weight_to_this_node = np.ones(num_of_weight)
                 list_weight_each_node.append(weight_to_this_node)
             # hidden layer -> hidden layer
             else:
                 num_of_weight = num_of_nodes_in_hidden_layer[layer_index - 1] + 1
-                weight_to_this_node = np.random.uniform(low = -1.0, high = 1.0, size = num_of_weight)
+                weight_to_this_node = np.ones(num_of_weight)
                 list_weight_each_node.append(weight_to_this_node)
             list_weight_each_layer.extend(list_weight_each_node)
         list_weight_hidden_hidden.append(list_weight_each_layer)
@@ -156,7 +157,7 @@ def createListVelocity(num_of_hidden_layers, num_of_nodes_in_hidden_layer, num_o
     for node_index in range(0, num_of_output):
         # number of weight from the last hidden layer to output node = number of node in the last hidden layer + weight bias
         num_of_weight = num_of_nodes_in_hidden_layer[num_of_hidden_layers - 1] + 1
-        weight_to_this_node = np.random.uniform(low = -1.0, high = 1.0, size = num_of_weight)
+        weight_to_this_node = np.ones(num_of_weight)
         list_weight_hidden_output.append(weight_to_this_node)
     # combine all layers together
     list_all_weight = []
