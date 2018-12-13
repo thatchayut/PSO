@@ -13,9 +13,7 @@ def main():
     # default row_to_read = 8029
     # default row_to_read_5_days = 8149
     # default row_to_read_10_days = 8029    
-    # row_to_read_5_days = 9237
-    # row_to_read_10_days = 9117
-    row_to_read = 10
+    row_to_read = 8029
     file = pd.read_csv("AirQualityUCI.csv", nrows = row_to_read)
     col_to_read_input = ['PT08.S1(CO)', 'PT08.S2(NMHC)', 'PT08.S3(NOx)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH']
     col_to_read_output_5_days = ['Next_5_days_C6H6(GT)']
@@ -23,7 +21,6 @@ def main():
     file_input = pd.read_csv("AirQualityUCI_edited.csv", usecols = col_to_read_input, nrows = row_to_read)
     file_output_5_days = pd.read_csv("AirQualityUCI_edited.csv", usecols = col_to_read_output_5_days, nrows = row_to_read)
     file_output_10_days = pd.read_csv("AirQualityUCI_edited.csv", usecols = col_to_read_output_10_days, nrows = row_to_read)
-    # num_of_data = file_input.shape[0]
     num_of_data = row_to_read
 
     # ask for required value
@@ -46,23 +43,24 @@ def main():
             break
     learning_rate = float(learning_rate)
 
+    output_file_name = input("Output file name : ")
+    output_file = open(str(output_file_name) + ".txt", "w+")
+
     # create list of sample's index
     list_sample_index = list(file.index)
     # shuffle list to make it's not affected by order
     random.shuffle(list_sample_index)
-    # print(list_sample_index)
 
     # separate input in to k chunks
     chunk_size = math.ceil(num_of_data / num_of_folds)
     chunk_sample = list(process.chunks(list_sample_index, chunk_size))
     num_of_chunks = len(chunk_sample)
-    # print(chunk_sample_index)
-    # print(len(chunk_sample_index))
 
     # k-fold cross validation
     for test_sample_index in range(0, num_of_chunks):
         fold_start_time = time.time()
         print("\n------------------------------------------ K : " + str(test_sample_index + 1) + " --------------------------------")
+        output_file.write("------------------------------------------ K : " + str(test_sample_index + 1) + " --------------------------------\n")
         chunk_sample_test = chunk_sample[test_sample_index]
         chunk_sample_train = []
 
@@ -70,7 +68,6 @@ def main():
         for train_sample_index in range(0, num_of_chunks):
             if (chunk_sample[train_sample_index] is not chunk_sample_test):
                 chunk_sample_train.extend(chunk_sample[train_sample_index])
-        # print("Size fo training data : " + str(len(chunk_sample_train)))
 
         # prepare data for training
         file_training_input = file_input.iloc[chunk_sample_train]
@@ -130,7 +127,6 @@ def main():
             key = i
             value = process.createParticle(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
             particles[key] = value
-            # particles_pbest[key] = value   
 
         particles_pbest = {}
         for i in range(0, num_of_samples):
@@ -201,31 +197,18 @@ def main():
                 desired_output_5_days = list_training_output_5_days_normalized[i]
                 desired_output_10_days = list_training_output_10_days_normalized[i]
 
-                # print("Actual Output : " + str(actual_output))
-                # print("Desired Output (5 days) : " + str(desired_output_5_days))
-                # print("Desired Output (10 days) : " + str(desired_output_10_days))
-
                 # calculate fitness of each particle
                 fitness_value = process.mae(actual_output, desired_output_5_days, desired_output_10_days)
-                # print("fitness value = " + str(fitness_value))
-                # print("The best fitness value = " + str(list_pbest[i]))
-                # print()
 
-                # print("BEFORE list_pbest = " + str(list_pbest))
                 # compare the performance of each individual to its best performance (pbest)
                 if (fitness_value < list_pbest[i]):
                     # change pbest of this particle
                     list_pbest[i] = fitness_value
                     particles_pbest[i] = copy.deepcopy(particles[i])
 
-                # print("Before update : " + str(particles[i]))
-                # print()
-                # print("pbest particles : " + str(particles_pbest[i]))
-                # print()
                 # change the velocity vector of each particles
                 for layer_index in range(0, num_of_hidden_layers):
                     for node_index in range(0, num_of_nodes_in_hidden_layer[layer_index]):
-                        # result = 0
                         # weight index is between 1 to len(particles) because weight_index '0' is weight bias
                         num_of_velocity = len(particles_velocity[i][layer_index][node_index])
                         for weight_index in range(0, num_of_velocity):
@@ -253,10 +236,7 @@ def main():
 
                             # update weight
                             particles[i][last_layer_index][output_index][weight_index] = x + particles_velocity[i][last_layer_index][output_index][weight_index]
-                
-                # print("Velocity of gen " + str(count_generation + 1) + " of particles " + str(i) + " = " + str(particles_velocity[i]))
-                # print()
-                # print("After update : " + str(particles[i]))
+
         # Testing
         # prepare testing data
         print()
@@ -366,21 +346,22 @@ def main():
 
             # calculate fitness of each particle
             fitness_value = process.mae(actual_output, desired_output_5_days, desired_output_10_days)
-            # print("Mean Average Error of fold - " + str(test_sample_index + 1) + " : " + str(fitness_value))
             total_error += fitness_value
         error = (total_error / num_of_samples_to_test)
         error = round(error, 7)
         print()
         print("Mean Average Error of fold-" + str(test_sample_index + 1) + " : " + str(error))
-
+        output_file.write(" Mean Average Error of fold-" + str(test_sample_index + 1) + " : " + str(error) + "\n")
         fold_end_time = time.time()
         fold_elapse_time_second = fold_end_time - fold_start_time
         fold_elapse_time_minute = round((fold_elapse_time_second / 60), 4)
-        print("Time elaspe in this fold = " + str(fold_elapse_time_minute) +" minutes")
+        print("Time elapse in this fold = " + str(fold_elapse_time_minute) +" minutes")
+        output_file.write(" Time elapse in this fold = " + str(fold_elapse_time_minute) +" minutes\n")
     end_time = time.time()
     total_elapse_time_second = end_time - start_time
     total_elapse_time_minute = round((total_elapse_time_second / 60), 4)
-    print("\nTotal elapse time : " + str(total_elapse_time_minute) + " minutes")
+    print("\n Total elapse time : " + str(total_elapse_time_minute) + " minutes")
+    output_file.write("Total elapse time : " + str(total_elapse_time_minute) + " minutes")
 
 if __name__ == '__main__':
     main()

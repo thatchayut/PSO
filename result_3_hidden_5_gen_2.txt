@@ -1,0 +1,31 @@
+------------------------------------------ K : 1 --------------------------------
+ Mean Average Error of fold-1 : 0.4938697
+ Time elapse in this fold = 0.1535 minutes
+------------------------------------------ K : 2 --------------------------------
+ Mean Average Error of fold-2 : 0.4912714
+ Time elapse in this fold = 0.1513 minutes
+------------------------------------------ K : 3 --------------------------------
+ Mean Average Error of fold-3 : 0.4986009
+ Time elapse in this fold = 0.1517 minutes
+------------------------------------------ K : 4 --------------------------------
+ Mean Average Error of fold-4 : 0.4886783
+ Time elapse in this fold = 0.1541 minutes
+------------------------------------------ K : 5 --------------------------------
+ Mean Average Error of fold-5 : 0.4934619
+ Time elapse in this fold = 0.1531 minutes
+------------------------------------------ K : 6 --------------------------------
+ Mean Average Error of fold-6 : 0.4939568
+ Time elapse in this fold = 0.1559 minutes
+------------------------------------------ K : 7 --------------------------------
+ Mean Average Error of fold-7 : 0.4951391
+ Time elapse in this fold = 0.1543 minutes
+------------------------------------------ K : 8 --------------------------------
+ Mean Average Error of fold-8 : 0.5014685
+ Time elapse in this fold = 0.158 minutes
+------------------------------------------ K : 9 --------------------------------
+ Mean Average Error of fold-9 : 0.4983426
+ Time elapse in this fold = 0.1547 minutes
+------------------------------------------ K : 10 --------------------------------
+ Mean Average Error of fold-10 : 0.4935841
+ Time elapse in this fold = 0.1548 minutes
+Total elapse time : 2.3032 minutes
