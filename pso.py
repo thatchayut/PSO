@@ -13,7 +13,7 @@ def main():
     # default row_to_read_10_days = 8029    
     # row_to_read_5_days = 9237
     # row_to_read_10_days = 9117
-    row_to_read = 8029
+    row_to_read = 10
     file = pd.read_csv("AirQualityUCI.csv", nrows = row_to_read)
     col_to_read_input = ['PT08.S1(CO)', 'PT08.S2(NMHC)', 'PT08.S3(NOx)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH']
     col_to_read_output_5_days = ['Next_5_days_C6H6(GT)']
@@ -35,6 +35,15 @@ def main():
         else:
             break
     num_of_gen = int(num_of_gen)
+
+    while True:
+        learning_rate = input("Positive number used to update velocity : ")
+        if (float(learning_rate) <= 0):
+            print("WARNING : This must be positive number")
+        else:
+            break
+    learning_rate = float(learning_rate)
+
     # create list of sample's index
     list_sample_index = list(file.index)
     # shuffle list to make it's not affected by order
@@ -113,13 +122,18 @@ def main():
             list_training_output_10_days_normalized.append(result[len(result) - 1])
 
         # create all particles in this swarm
-        particles = {}
-        particles_pbest = {}
+        particles = {}      
         for i in range(0, num_of_samples):
             key = i
             value = process.createParticle(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
             particles[key] = value
-            particles_pbest[key] = value         
+            # particles_pbest[key] = value   
+
+        particles_pbest = {}
+        for i in range(0, num_of_samples):
+            key = i 
+            value = copy.deepcopy(particles[key])     
+            particles_pbest[key] = value 
     
         # create a list to record output from each node
         list_all_Y = process.createY(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
@@ -127,15 +141,18 @@ def main():
         # create a list of pbest (personal best)
         list_pbest = process.createListPbest(num_of_samples)
 
-        # # create a list of velocity
-        # particles_velocity = {}
-        # for i in range(0, num_of_samples):
-        # list_velocity = process.createListVelocity(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
+        # create velocity of each particles
+        particles_velocity = {}
+        for i in range(0, num_of_samples):
+            key = i
+            velocity = process.createListVelocity(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
+            particles_velocity[key] = velocity
 
         # TRAINING
         # Iterate through generations
         for count_generation in range(0, num_of_gen):
             print(" #### Generation " + str(count_generation + 1) + " ####")
+            list_all_Y = process.createY(num_of_hidden_layers, num_of_nodes_in_hidden_layer)
             # Forwarding
             for i in range(0, num_of_samples):
                 # calcualte output for each node in hidden layers
@@ -186,14 +203,49 @@ def main():
                 # calculate fitness of each particle
                 fitness_value = process.mae(actual_output, desired_output_5_days, desired_output_10_days)
                 print("fitness value = " + str(fitness_value))
+                print("previous fitness value = " + str(list_pbest[i]))
                 print()
 
+                print("BEFORE list_pbest = " + str(list_pbest))
                 # compare the performance of each individual to its best performance (pbest)
                 if (fitness_value < list_pbest[i]):
+                    # print("NEW PBEST ACTIVATED!!!!!!!!!!")
+                    # print("previous pbest : " + str(list_pbest[i]))
+                    # print("new pbest : " + str(fitness_value))
                     # change pbest of this particle
                     list_pbest[i] = fitness_value
                     particles_pbest[i] = particles[i]
+                    # print("updated pbest = " + str(list_pbest[i]))
+                # print("AFTER  list_pbest : " + str(list_pbest))
+                # print()
+                print("Before update : " + str(particles[i]))
+                print()
+                print("pbest particles : " + str(particles_pbest[i]))
+                print()
+                # change the velocity vector of each particles
+                for layer_index in range(0, num_of_hidden_layers):
+                    for node_index in range(0, num_of_nodes_in_hidden_layer[layer_index]):
+                        # result = 0
+                        # weight index is between 1 to len(particles) because weight_index '0' is weight bias
+                        num_of_velocity = len(particles_velocity[i][layer_index][node_index])
+                        for weight_index in range(0, num_of_velocity):
+                            # result += (element * particles[i][layer_index][node_index][weight_index])
+                            previous_velocity  = particles_velocity[i][layer_index][node_index][weight_index]
+                            xpbest = particles_pbest[i][layer_index][node_index][weight_index]
+                            # print("xpbest = " + str(xpbest))
+                            x = particles[i][layer_index][node_index][weight_index]
+                            # print("x = " + str(x))
 
+                            velocity = previous_velocity + (learning_rate * (xpbest - x))
+                            # print("velocity = " +str(velocity))
+                            # update velocity
+                            particles_velocity[i][layer_index][node_index][weight_index] = velocity
+
+                            # update weight
+                            particles[i][layer_index][node_index][weight_index] = x + particles_velocity[i][layer_index][node_index][weight_index]
+                print("Velocity of gen " + str(count_generation + 1) + " of particles " + str(i) + " = " + str(particles_velocity[i]))
+                print()
+                print("After update : " + str(particles[i]))
 
 if __name__ == '__main__':
     main()
